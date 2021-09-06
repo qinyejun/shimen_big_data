@@ -56,15 +56,15 @@ class SaleRankingNotification extends Notification implements ShouldQueue
 
     private function shopSaleRanking(){
         $perPage = 20;
-        $order_rank = DB::table('order')
-            ->select(DB::raw('site_id, SUM(order_money) as order_sales'))
+        $order_rank = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('site_id, SUM(order_money) as order_sales'))
             ->groupBy('site_id')
             ->orderBy('order_sales', 'desc')
             ->limit($perPage)
             ->get();
         if($order_rank){
             foreach ($order_rank as $key => $value) {
-                $shop = DB::table('shop')->where('site_id', $value->site_id)->first();
+                $shop = DB::connection('mysql2')->table('shop')->where('site_id', $value->site_id)->first();
                 $order_rank[$key]->site_name = $shop ? $shop->site_name : '';
             }
             return $order_rank;

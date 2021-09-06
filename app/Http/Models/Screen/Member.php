@@ -10,4 +10,5 @@ class Member extends Model
     protected $table = 'member';
     protected $primaryKey = 'member_id';
     protected $fillable = ['username', 'nickname', 'mobile']; //批量赋值
+    protected $connection = 'mysql2';
 }

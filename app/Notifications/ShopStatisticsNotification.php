@@ -57,8 +57,8 @@ class ShopStatisticsNotification extends Notification implements ShouldQueue
     }
 
     private function shopEntryStatistic(){
-        $shop_community = DB::table('shop')
-            ->select(DB::raw('community_name, COUNT(community_name) as shop_num'))
+        $shop_community = DB::connection('mysql2')->table('shop')
+            ->select(DB::connection('mysql2')->raw('community_name, COUNT(community_name) as shop_num'))
             ->groupBy('community_name')
             ->get();
 
@@ -68,8 +68,8 @@ class ShopStatisticsNotification extends Notification implements ShouldQueue
                 $shops = Shop::where('community_name', $value->community_name)->get();
                 if($shops){
                     foreach ($shops as $k => $shop) {
-                        $order_sum = DB::table('order')
-                            ->select(DB::raw('SUM(order_money) as order_sales'))
+                        $order_sum = DB::connection('mysql2')->table('order')
+                            ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales'))
                             ->where('site_id', $shop->site_id)
                             ->first();
                         $shop_community_sales += $order_sum ? $order_sum->order_sales : 0;
@@ -86,19 +86,19 @@ class ShopStatisticsNotification extends Notification implements ShouldQueue
 
     private function industryAreaStatistic()
     {
-        $shop_category = DB::table('shop_category')->get();
+        $shop_category = DB::connection('mysql2')->table('shop_category')->get();
         if($shop_category){
             foreach ($shop_category as $key => $value) {
-                $all_shop_num = DB::table('shop')->where('category_id', $value->category_id)->count();
-                $statistics = DB::table('shop')
-                    ->select(DB::raw('community, COUNT(community) as shop_num'))
+                $all_shop_num = DB::connection('mysql2')->table('shop')->where('category_id', $value->category_id)->count();
+                $statistics = DB::connection('mysql2')->table('shop')
+                    ->select(DB::connection('mysql2')->raw('community, COUNT(community) as shop_num'))
                     ->where('category_id', $value->category_id)
                     ->groupBy('community')
                     ->orderBy('shop_num', 'desc')
                     ->get();
                 if($statistics){
                     foreach ($statistics as $k => $statistic) {
-                        $area = DB::table('area')->where('id', $statistic->community)->first();
+                        $area = DB::connection('mysql2')->table('area')->where('id', $statistic->community)->first();
                         $statistics[$k]->community_name = $area ?$area->name : '';
                         $statistics[$k]->shop_num_percent = $all_shop_num ? round(100*$statistic->shop_num/$all_shop_num, 1) : 0;
                     }

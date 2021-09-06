@@ -55,15 +55,15 @@ class OrderStatisticsNotification extends Notification implements ShouldQueue
     }
 
     private function orderAreaStatistic(){
-        $all_order_num = DB::table('order')->count();
-        $province_order = DB::table('order')
-            ->select(DB::raw('province_id, COUNT(province_id) as order_num'))
+        $all_order_num = DB::connection('mysql2')->table('order')->count();
+        $province_order = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('province_id, COUNT(province_id) as order_num'))
             ->groupBy('province_id')
             ->get();
 
         if($province_order){
             foreach ($province_order as $key => $value) {
-                $province = DB::table('area')->where('id', $value->province_id)->first();
+                $province = DB::connection('mysql2')->table('area')->where('id', $value->province_id)->first();
                 $province_order[$key]->province_name = $province ? $province->name : '';
                 $province_order[$key]->order_num_percent = $all_order_num ? round(100*$value->order_num/$all_order_num, 1) : 0;
             }
