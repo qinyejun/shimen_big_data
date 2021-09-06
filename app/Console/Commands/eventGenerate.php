@@ -15,7 +15,7 @@ use App\Events\MemberShipped;
 use App\Events\OrderShipped;
 use App\Events\ShopShipped;
 
-class eventGenerate extends Command
+class EventGenerate extends Command
 {
     const AJAX_SUCCESS = 0;
     const AJAX_FAIL = -1;

@@ -6,6 +6,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Console\Commands\ExcelReader;
 use App\Console\Commands\ExcelWriter;
+use App\Console\Commands\EventGenerate;
 
 class Kernel extends ConsoleKernel
 {
@@ -17,7 +18,8 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         //Commands\RecordAlarm::class,
         ExcelReader::class,
-        ExcelWriter::class
+        ExcelWriter::class,
+        EventGenerate::class
     ];
 
     /**
@@ -28,7 +30,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //$schedule->command('alarm:record')->everyMinute();
+        $schedule->command('event:generate')->everyMinute();
     }
 
     /**
