@@ -67,8 +67,8 @@ class ScreenController extends Controller
         foreach ($lists as $key => $value) {
             $goods_num = Goods::select(['goods_id'])->count();
             $contents[$key]['goods_num'] = $goods_num ? $goods_num : 0;
-            $order_sum = DB::table('order')
-                ->select(DB::raw('SUM(order_money) as order_sales, site_id, COUNT(site_id) as order_num'))
+            $order_sum = DB::connection('mysql2')->table('order')
+                ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales, site_id, COUNT(site_id) as order_num'))
                 ->where('site_id', $value['site_id'])
                 ->groupBy('site_id')
                 ->first();
@@ -84,22 +84,22 @@ class ScreenController extends Controller
     {
         $todaytime = strtotime(date('Y-m-d') . ' 00:00:00');
         $monthtime = strtotime(date('Y-m') . '-01 00:00:00');
-        $order_all_sum = DB::table('order')
-            ->select(DB::raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
+        $order_all_sum = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
             ->first();
 
-        $order_month_sum = DB::table('order')
-            ->select(DB::raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
+        $order_month_sum = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
             ->where('create_time', '>', $monthtime)
             ->first();
-        $order_today_sum = DB::table('order')
-            ->select(DB::raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
+        $order_today_sum = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales, COUNT(site_id) as order_num'))
             ->where('create_time', '>', $todaytime)
             ->first();
 
-        $members = DB::table('member')->count();
-        $today_members = DB::table('member')->where('reg_time', '>', $todaytime)->count();
-        $today_login_members = DB::table('member')->where('last_login_time', '>', $todaytime)->count();
+        $members = DB::connection('mysql2')->table('member')->count();
+        $today_members = DB::connection('mysql2')->table('member')->where('reg_time', '>', $todaytime)->count();
+        $today_login_members = DB::connection('mysql2')->table('member')->where('last_login_time', '>', $todaytime)->count();
 
         $rtn = array(
             "all_order_sales" => $order_all_sum ? $order_all_sum->order_sales : 0,
@@ -118,8 +118,8 @@ class ScreenController extends Controller
     //店铺入驻统计
     public function shopEntryStatistic(Request $request)
     {
-        $shop_community = DB::table('shop')
-            ->select(DB::raw('community_name, COUNT(community_name) as shop_num'))
+        $shop_community = DB::connection('mysql2')->table('shop')
+            ->select(DB::connection('mysql2')->raw('community_name, COUNT(community_name) as shop_num'))
             ->groupBy('community_name')
             ->get();
 
@@ -129,8 +129,8 @@ class ScreenController extends Controller
                 $shops = Shop::where('community_name', $value->community_name)->get();
                 if($shops){
                     foreach ($shops as $k => $shop) {
-                        $order_sum = DB::table('order')
-                            ->select(DB::raw('SUM(order_money) as order_sales'))
+                        $order_sum = DB::connection('mysql2')->table('order')
+                            ->select(DB::connection('mysql2')->raw('SUM(order_money) as order_sales'))
                             ->where('site_id', $shop->site_id)
                             ->first();
                         $shop_community_sales += $order_sum ? $order_sum->order_sales : 0;
@@ -156,15 +156,15 @@ class ScreenController extends Controller
     //销售订单去向统计
     public function orderAreaStatistic(Request $request)
     {
-        $all_order_num = DB::table('order')->count();
-        $province_order = DB::table('order')
-            ->select(DB::raw('province_id, COUNT(province_id) as order_num'))
+        $all_order_num = DB::connection('mysql2')->table('order')->count();
+        $province_order = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('province_id, COUNT(province_id) as order_num'))
             ->groupBy('province_id')
             ->get();
 
         if($province_order){
             foreach ($province_order as $key => $value) {
-                $province = DB::table('area')->where('id', $value->province_id)->first();
+                $province = DB::connection('mysql2')->table('area')->where('id', $value->province_id)->first();
                 $province_order[$key]->province_name = $province ? $province->name : '';
                 $province_order[$key]->order_num_percent = $all_order_num ? round(100*$value->order_num/$all_order_num, 1) : 0;
             }
@@ -179,15 +179,15 @@ class ScreenController extends Controller
     public function shopSaleRanking(Request $request)
     {
         $perPage = 20;
-        $order_rank = DB::table('order')
-            ->select(DB::raw('site_id, SUM(order_money) as order_sales'))
+        $order_rank = DB::connection('mysql2')->table('order')
+            ->select(DB::connection('mysql2')->raw('site_id, SUM(order_money) as order_sales'))
             ->groupBy('site_id')
             ->orderBy('order_sales', 'desc')
             ->limit($perPage)
             ->get();
         if($order_rank){
             foreach ($order_rank as $key => $value) {
-                $shop = DB::table('shop')->where('site_id', $value->site_id)->first();
+                $shop = DB::connection('mysql2')->table('shop')->where('site_id', $value->site_id)->first();
                 $order_rank[$key]->site_name = $shop ? $shop->site_name : '';
             }
             return UtilService::format_data(self::AJAX_SUCCESS, '获取成功', $order_rank);
@@ -199,19 +199,19 @@ class ScreenController extends Controller
 
     public function industryAreaStatistic(Request $request)
     {
-        $shop_category = DB::table('shop_category')->get();
+        $shop_category = DB::connection('mysql2')->table('shop_category')->get();
         if($shop_category){
             foreach ($shop_category as $key => $value) {
-                $all_shop_num = DB::table('shop')->where('category_id', $value->category_id)->count();
-                $statistics = DB::table('shop')
-                    ->select(DB::raw('community, COUNT(community) as shop_num'))
+                $all_shop_num = DB::connection('mysql2')->table('shop')->where('category_id', $value->category_id)->count();
+                $statistics = DB::connection('mysql2')->table('shop')
+                    ->select(DB::connection('mysql2')->raw('community, COUNT(community) as shop_num'))
                     ->where('category_id', $value->category_id)
                     ->groupBy('community')
                     ->orderBy('shop_num', 'desc')
                     ->get();
                 if($statistics){
                     foreach ($statistics as $k => $statistic) {
-                        $area = DB::table('area')->where('id', $statistic->community)->first();
+                        $area = DB::connection('mysql2')->table('area')->where('id', $statistic->community)->first();
                         $statistics[$k]->community_name = $area ?$area->name : '';
                         $statistics[$k]->shop_num_percent = $all_shop_num ? round(100*$statistic->shop_num/$all_shop_num, 1) : 0;
                     }
