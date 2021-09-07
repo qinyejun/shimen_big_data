@@ -16,9 +16,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //Commands\RecordAlarm::class,
-        ExcelReader::class,
-        ExcelWriter::class,
+        //ExcelReader::class,
+        //ExcelWriter::class,
         EventGenerate::class
     ];
 
